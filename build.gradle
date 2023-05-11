@@ -1,0 +1,79 @@
+plugins {
+    id 'application'
+    id 'org.springframework.boot' version '3.0.6'
+    id 'io.spring.dependency-management' version '1.1.0'
+    id 'org.graalvm.buildtools.native' version '0.9.21'
+}
+
+group 'demo'
+version '1.0.0'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+        vendor = JvmVendorSpec.matching("Oracle Corporation")
+    }
+}
+
+application {
+    mainClass = 'demo.Main'
+}
+
+graalvmNative {
+    agent {
+        defaultMode = 'standard'
+    }
+
+    binaries {
+        main {
+            imageName = 'app'
+            quickBuild = true
+
+            javaLauncher = javaToolchains.launcherFor {
+                languageVersion = JavaLanguageVersion.of(17)
+                vendor = JvmVendorSpec.matching("Oracle Corporation")
+            }
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    /* Web */
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    /* Test */
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.apache.httpcomponents.client5:httpclient5:5.2.1'
+}
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs += ['-Xlint:all', '-Xdiags:verbose']
+}
+
+tasks.named('test', Test) {
+    useJUnitPlatform()
+}
+
+tasks.named('jar', org.gradle.jvm.tasks.Jar) {
+    archiveBaseName = 'app'
+    archiveClassifier = ''
+    manifest {
+        attributes 'Main-Class': application.mainClass
+        attributes 'Automatic-Module-Name': project.name.replaceAll("-", ".")
+    }
+}
+
+tasks.register('package', Copy) {
+    group = 'distribution'
+    description = "Assembles a (thin) JAR file containing the main classes and copies the runtime dependencies to the ${buildDir}/libs directory"
+
+    dependsOn 'jar'
+    into buildDir
+    into('libs') {
+        from configurations.runtimeClasspath
+    }
+}
