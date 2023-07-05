@@ -64,3 +64,7 @@ Technology stack used
            at org.springframework.boot.test.context.SpringBootTestAotProcessor.main(SpringBootTestAotProcessor.java:63)
    ...
    ```
+
+## Related issues
+
+- [Investigate test AOT processing support with GraalVM tracing agent and Native Build Tools](https://github.com/spring-projects/spring-boot/issues/35445)
